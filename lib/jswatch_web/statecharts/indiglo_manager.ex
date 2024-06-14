@@ -33,7 +33,9 @@ defmodule JswatchWeb.IndigloManager do
   end
 
   def handle_info(SnoozeActivated, %{ui_pid: pid, st: WaitingSnooze} = state) do
-    GenServer.cast(pid, :unse
+    GenServer.cast(pid, :unset_indiglo)
+    :gproc.send({:p, :l, :ui_event}, :update_alarm)
+    {:noreply, %{state | st: IndigloOff}}
   end
 
   def handle_info(Waiting_IndigloOff, %{ui_pid: pid, st: Waiting} = state) do
