@@ -20,16 +20,20 @@ defmodule JswatchWeb.IndigloManager do
     {:noreply, state}
   end
 
-  def handle_info(:"bottom-right-pressed", %{st: WaitingSnooze, snooze_timer: snooze_timer} = state) do
+  def handle_info(:"bottom-right-pressed", %{st: AlarmOn} = state) do
+    snooze_timer = Process.send_after(self(), SnoozeActivated, 2000)
+    {:noreply, %{state | st: WaitingSnooze, snooze_timer: snooze_timer}}
+  end
+
+  def handle_info(:"bottom-right-released", %{st: WaitingSnooze, snooze_timer: snooze_timer} = state) do
     if snooze_timer != nil do
       Process.cancel_timer(snooze_timer)
     end
-    {:noreply, %{state | st: AlarmOff, snooze_timer: snooze_timer}}
+    {:noreply, %{state | st: AlarmOff, snooze_timer: nil}}
   end
 
-  def handle_info(:"bottom-right-released", %{st: AlarmOn} = state) do
-    snooze_timer = Process.send_after(self(), SnoozeActivated, 2000)
-    {:noreply, %{state | st: WaitingSnooze, snooze_timer: snooze_timer}}
+  def handle_info(SnoozeActivated, %{ui_pid: pid, st: WaitingSnooze} = state) do
+    GenServer.cast(pid, :unse
   end
 
   def handle_info(Waiting_IndigloOff, %{ui_pid: pid, st: Waiting} = state) do
